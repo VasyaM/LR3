@@ -1,29 +1,20 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Sep 19 22:16:17 2019
-
 @author: вася, даша
-
-(ಥ﹏ಥ)
 BAKIN PROJECT 1 
-(╯°益°)╯彡┻━┻ 
 """
-
 from collections import Counter
-
 import pickle #bin file
-
 import numpy, math, textwrap
 from math import copysign, fabs, floor, isfinite, modf
-
 def indexTest(PrSumBinSlice):#проверка индексности
     for i in range(len(PrSumBinSlice)):
         for j in range(i+1,len(PrSumBinSlice)):
             if PrSumBinSlice[j].startswith(PrSumBinSlice[i]):
                 PrSumBinSlice[i]+='0'
                 indexTest(PrSumBinSlice)
-
-                
+       
 def Unpack(InpArc,OutFile):  #распаковка
     try:
         with open(InpArc+".kekeke",'r+b') as AF:  #вытаскивание переменных из аръива
@@ -47,32 +38,23 @@ def Unpack(InpArc,OutFile):  #распаковка
         u_arr[i]= ('0'* zeros) + u_arr[i] #восстановление ведущих нулей
     for i in range(len(u_arr)): #сборка из отрезков в троку
         bin_str += u_arr[i]
-#    if bin_str!= CodedTxt: # проверка целостности, не будет работать после добавления меню!!!!!!!
-#        print("Файл поврежден")
-#    print(u_arr)
-#    print(bin_str)
+
     bin_str = bin_str[:-a_z]#удаление доп нулей
     comp_str='' #временный код
     unp_text='' #распаковыный текст
     for i in range(len(bin_str)): # сравнение с ключами
         comp_str += bin_str[i] #добавление 1 символа ко временному коду
-#        print(comp_str)
+
         for j in range(len(u_codes)): #сравнение со всеми кодами
             if comp_str == u_codes[j]:
                 unp_text += u_chrs[j] #добавление символа в в распакованый текст
                 comp_str='' #обнуление временного кода
-                 
-#    print(unp_text) #распакованый текст
+
     f=open(OutFile+".txt","w")
     f.write(unp_text)
     f.close()
     print("Файл распакован")
-    #проверка целостности, не будет работать с меню
-#    if fread == unp_text: 
-#        print('успешно разжато') 
-#    else:
-#        print('Файл поврежден')
-#        print(len(CodedTxt)%8)
+    
 
 #перевод дроби в двоичную систему
 def float_to_bin_fixed(f):
@@ -85,7 +67,7 @@ def float_to_bin_fixed(f):
     if fint==1: # если вероятность равна 1
         return f'{sign}{floor(fint):b}'
     assert d & (d - 1) == 0  # power of two
-#    return f'{sign}{floor(fint):b}.{n:0{d.bit_length()-1}b}'
+
     return f'{n:0{d.bit_length()-1}b}'
 
 
@@ -130,7 +112,7 @@ def Pack(InpFile,OutArc):
     #!!!!!!!!!!!!!!!!!ДОПИСЫВАНИЕ НУЛЕЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         zer = PrLog[i]-len(PrSumBinSlice[i])
         if zer!=0:
-#            print("ADD",i)
+
             if PrSumBin[i]=="1": # если вероятность последнего символа равно 1
                 PrSumBinSlice[i]='1'*PrLog[i]
             else:
