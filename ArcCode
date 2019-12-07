@@ -1,0 +1,206 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 19 22:16:17 2019
+
+@author: вася, даша
+
+(ಥ﹏ಥ)
+BAKIN PROJECT 1 
+(╯°益°)╯彡┻━┻ 
+"""
+
+from collections import Counter
+
+import pickle #bin file
+
+import numpy, math, textwrap
+from math import copysign, fabs, floor, isfinite, modf
+
+def indexTest(PrSumBinSlice):#проверка индексности
+    for i in range(len(PrSumBinSlice)):
+        for j in range(i+1,len(PrSumBinSlice)):
+            if PrSumBinSlice[j].startswith(PrSumBinSlice[i]):
+                PrSumBinSlice[i]+='0'
+                indexTest(PrSumBinSlice)
+
+                
+def Unpack(InpArc,OutFile):  #распаковка
+    try:
+        with open(InpArc+".kekeke",'r+b') as AF:  #вытаскивание переменных из аръива
+            data = pickle.load(AF)  #словарь данных
+            u_chrs = data.get('chrs')  #символы
+            u_codes = data.get('Codes') #коды
+            u_bin = data.get('ByteTxt') #бинарный екст
+            a_z = data.get('addedZeros') #количество лишних нулей
+    except FileNotFoundError:
+        print("Файл не найден, проверьте путь и имя файла")
+        input('press any button')
+        Menu()
+    u_arr = []
+    bin_str=''
+    print(u_codes)
+    print(u_chrs)
+    for i in range(len(u_bin)):# создание массива отрезков по 8 бит
+        u_arr.append(bin(u_bin[i])) #вытаскивание отдельных байтов в архив
+        u_arr[i]= u_arr[i][2:] #обрезка начала Ob
+        zeros = 8-len(u_arr[i]) #недостающие нули
+        u_arr[i]= ('0'* zeros) + u_arr[i] #восстановление ведущих нулей
+    for i in range(len(u_arr)): #сборка из отрезков в троку
+        bin_str += u_arr[i]
+#    if bin_str!= CodedTxt: # проверка целостности, не будет работать после добавления меню!!!!!!!
+#        print("Файл поврежден")
+#    print(u_arr)
+#    print(bin_str)
+    bin_str = bin_str[:-a_z]#удаление доп нулей
+    comp_str='' #временный код
+    unp_text='' #распаковыный текст
+    for i in range(len(bin_str)): # сравнение с ключами
+        comp_str += bin_str[i] #добавление 1 символа ко временному коду
+#        print(comp_str)
+        for j in range(len(u_codes)): #сравнение со всеми кодами
+            if comp_str == u_codes[j]:
+                unp_text += u_chrs[j] #добавление символа в в распакованый текст
+                comp_str='' #обнуление временного кода
+                 
+#    print(unp_text) #распакованый текст
+    f=open(OutFile+".txt","w")
+    f.write(unp_text)
+    f.close()
+    print("Файл распакован")
+    #проверка целостности, не будет работать с меню
+#    if fread == unp_text: 
+#        print('успешно разжато') 
+#    else:
+#        print('Файл поврежден')
+#        print(len(CodedTxt)%8)
+
+#перевод дроби в двоичную систему
+def float_to_bin_fixed(f):
+    if not isfinite(f):
+        return repr(f)  # inf nan
+
+    sign = '-' * (copysign(1.0, f) < 0)
+    frac, fint = modf(fabs(f))  # split on fractional, integer parts
+    n, d = frac.as_integer_ratio()  # frac = numerator / denominator
+    if fint==1: # если вероятность равна 1
+        return f'{sign}{floor(fint):b}'
+    assert d & (d - 1) == 0  # power of two
+#    return f'{sign}{floor(fint):b}.{n:0{d.bit_length()-1}b}'
+    return f'{n:0{d.bit_length()-1}b}'
+
+
+def Pack(InpFile,OutArc):
+    chars=0
+    try:
+        f=open(InpFile+'.txt','r') # открытие файла
+    except FileNotFoundError:
+        print("Файл не найден, проверьте путь и имя файла")
+        input('press any button')
+        Menu()
+    fread = f.read()#.decode("UTF-8") #раскодирование UTF-8
+    c = Counter(fread) #подсчет символов
+    chrCntr = list(c.values()) # массив количеств символов
+    chrs = list(c.keys()) # массив символов
+    if len(chrCntr)==0 or len(chrs)==0:
+        print("\n пустой файл!\n")
+        input("нажмите любую копку")
+        Menu()
+    chrCntr, chrs = (list(t) for t in zip(*sorted(zip(chrCntr, chrs)))) # сортировка обоих массивов относительно количества
+    
+    chrCntr = chrCntr[::-1] # переворачивания массива количеств
+    chrs = chrs[::-1] # переворачивание массива символов
+    Pr = []
+    for i in range(len(chrCntr)):  #вычисление вероятностей
+        Pr.append(chrCntr[i]/len(fread))
+        
+    PrSum = list(numpy.cumsum(Pr))
+    PrSum[0]=0
+    PrSumBin=[]
+    for i in range(len(PrSum)): #вычисление ключей
+        PrSumBin.append(float_to_bin_fixed(PrSum[i]))
+    
+    PrLog=[]
+    for i in range(len(PrSumBin)):  #вычисление длин ключей
+        PrLog.append(math.ceil(-1*math.log2(Pr[i])))
+     
+    PrSumBinSlice=[]
+    for i in range(len(PrSumBin)): #вырезание ключей нужной длины
+        PrSumBinSlice.append(PrSumBin[i][:PrLog[i]])
+        
+    #!!!!!!!!!!!!!!!!!ДОПИСЫВАНИЕ НУЛЕЙ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        zer = PrLog[i]-len(PrSumBinSlice[i])
+        if zer!=0:
+#            print("ADD",i)
+            if PrSumBin[i]=="1": # если вероятность последнего символа равно 1
+                PrSumBinSlice[i]='1'*PrLog[i]
+            else:
+                for j in range(zer): #если обрезало 0
+                    PrSumBinSlice[i]+='0'
+    indexTest(PrSumBinSlice) #проверка индексности
+    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    
+    
+    #КОДИРОВАНИЕ
+    CodedTxt=''
+    for i in range(len(fread)): #создание из исходного текста строки ключей
+        for j in range(len(chrs)):
+            if fread[i]==chrs[j]:
+                 CodedTxt+=PrSumBinSlice[j]  
+                 
+    #проверка кратности 8
+    addedZeros=0
+    if len(CodedTxt)%8 != 0: #добавление недостающих нулей
+       addedZeros =  len(CodedTxt)%8
+       CodedTxt+='0'*addedZeros
+       
+       
+    Bit8= textwrap.wrap(CodedTxt,8) # деление на отрезки по 8 бит
+#    print(chrs)
+    StrByte=[]
+    for i in range(len(Bit8)): #преобразование бит в байты
+        inteh= int(Bit8[i],2)
+        StrByte.append(inteh)
+    ByteTxt = bytearray(StrByte) #запись байтов в байтовый массив
+    with open(OutArc+".kekeke",'w+b') as FArc: #сохранение архива
+        data_dump = { 'chrs' : chrs,
+                     'Codes' : PrSumBinSlice,
+                     'ByteTxt': ByteTxt,
+                     'addedZeros':addedZeros
+                }
+        pickle.dump(data_dump,FArc)
+    FArc.close() #закрытие файла архива
+    f.close() #закрытие исходного файла
+    print("Файл сжат")
+    
+def Menu():
+    print("1. сжать файл")
+    print("2. расжать файл") 
+    print("3. выход")
+    try:
+        UserInp = int(input('->'))
+    except ValueError:
+        print("выберите вариант 1, 2 или 3")
+        input("нажмите любую кнопку")
+        Menu()
+        
+    if UserInp==1:
+        InpFile = input("Enter file name: ")
+        OutArc = input("Enter archive name: ")
+        Pack(InpFile,OutArc)
+    elif UserInp==2:
+        InpArc = input("Enter archive name: ")
+        OutFile = input("Enter file name: ")
+        Unpack(InpArc,OutFile)
+        Menu()
+    elif UserInp==3:
+        input("нажмите любую кнопку")
+    else:
+        print("выберите вариант 1 или 2")
+        input("нажмите любую кнопку")
+        Menu()
+    
+Menu()    
+#Pack()
+#Unpack() #распаковка
+
+
+    
